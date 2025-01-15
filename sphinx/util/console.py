@@ -2,47 +2,52 @@
 
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import sys
 from typing import TYPE_CHECKING
 
+from sphinx._cli.util.colour import (
+    terminal_supports_colour as color_terminal,  # NoQA: F401
+)
+
 if TYPE_CHECKING:
     from typing import Final
 
     # fmt: off
-    def reset(text: str) -> str: ...  # NoQA: E704
-    def bold(text: str) -> str: ...  # NoQA: E704
-    def faint(text: str) -> str: ...  # NoQA: E704
-    def standout(text: str) -> str: ...  # NoQA: E704
-    def underline(text: str) -> str: ...  # NoQA: E704
-    def blink(text: str) -> str: ...  # NoQA: E704
+    def reset(text: str) -> str: ...
+    def bold(text: str) -> str: ...
+    def faint(text: str) -> str: ...
+    def standout(text: str) -> str: ...
+    def underline(text: str) -> str: ...
+    def blink(text: str) -> str: ...
 
-    def black(text: str) -> str: ...  # NoQA: E704
-    def white(text: str) -> str: ...  # NoQA: E704
-    def red(text: str) -> str: ...  # NoQA: E704
-    def green(text: str) -> str: ...  # NoQA: E704
-    def yellow(text: str) -> str: ...  # NoQA: E704
-    def blue(text: str) -> str: ...  # NoQA: E704
-    def fuchsia(text: str) -> str: ...  # NoQA: E704
-    def teal(text: str) -> str: ...  # NoQA: E704
+    def black(text: str) -> str: ...
+    def white(text: str) -> str: ...
+    def red(text: str) -> str: ...
+    def green(text: str) -> str: ...
+    def yellow(text: str) -> str: ...
+    def blue(text: str) -> str: ...
+    def fuchsia(text: str) -> str: ...
+    def teal(text: str) -> str: ...
 
-    def darkgray(text: str) -> str: ...  # NoQA: E704
-    def lightgray(text: str) -> str: ...  # NoQA: E704
-    def darkred(text: str) -> str: ...  # NoQA: E704
-    def darkgreen(text: str) -> str: ...  # NoQA: E704
-    def brown(text: str) -> str: ...  # NoQA: E704
-    def darkblue(text: str) -> str: ...  # NoQA: E704
-    def purple(text: str) -> str: ...  # NoQA: E704
-    def turquoise(text: str) -> str: ...  # NoQA: E704
+    def darkgray(text: str) -> str: ...
+    def lightgray(text: str) -> str: ...
+    def darkred(text: str) -> str: ...
+    def darkgreen(text: str) -> str: ...
+    def brown(text: str) -> str: ...
+    def darkblue(text: str) -> str: ...
+    def purple(text: str) -> str: ...
+    def turquoise(text: str) -> str: ...
     # fmt: on
 
 try:
     # check if colorama is installed to support color on Windows
     import colorama
+
+    COLORAMA_AVAILABLE = True
 except ImportError:
-    colorama = None
+    COLORAMA_AVAILABLE = False
 
 _CSI: Final[str] = re.escape('\x1b[')  # 'ESC [': Control Sequence Introducer
 
@@ -89,26 +94,8 @@ def term_width_line(text: str) -> str:
         return text.ljust(_tw + len(text) - len(strip_escape_sequences(text))) + '\r'
 
 
-def color_terminal() -> bool:
-    if 'NO_COLOR' in os.environ:
-        return False
-    if sys.platform == 'win32' and colorama is not None:
-        colorama.init()
-        return True
-    if 'FORCE_COLOR' in os.environ:
-        return True
-    if not hasattr(sys.stdout, 'isatty'):
-        return False
-    if not sys.stdout.isatty():
-        return False
-    if 'COLORTERM' in os.environ:
-        return True
-    term = os.environ.get('TERM', 'dumb').lower()
-    return term in ('xterm', 'linux') or 'color' in term
-
-
 def nocolor() -> None:
-    if sys.platform == 'win32' and colorama is not None:
+    if sys.platform == 'win32' and COLORAMA_AVAILABLE:
         colorama.deinit()
     codes.clear()
 
